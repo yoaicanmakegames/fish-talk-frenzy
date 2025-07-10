@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fish Talk Frenzy</title>
+  <style>
+    body { margin: 0; background: #6ccff6; overflow: hidden; font-family: Arial, sans-serif; }
+    canvas { display: block; margin: 0 auto; background: #96e6ff; border: 2px solid #000; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const fishImages = ["🟠", "🔵", "🟣", "🟢", "🟡"];
+    const personalities = ["Sassy", "Chill", "Goofy", "Snobby", "Hyper"];
+
+    class Fish {
+      constructor(name, x, y, color, personality) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.personality = personality;
+        this.dialogue = "";
+        this.dialogueTimer = 0;
+      }
+
+      draw() {
+        ctx.font = "30px Arial";
+        ctx.fillText(this.color, this.x, this.y);
+        ctx.font = "12px Arial";
+        ctx.fillStyle = "#000";
+        ctx.fillText(this.name, this.x - 10, this.y - 10);
+        if (this.dialogueTimer > 0) {
+          ctx.fillText(this.dialogue, this.x - 30, this.y + 40);
+        }
+      }
+
+      talk() {
+        const lines = {
+          "Sassy": "You again?",
+          "Chill": "Just vibin...",
+          "Goofy": "Blub blub bro",
+          "Snobby": "Do NOT touch me",
+          "Hyper": "WOOOOO!!"
+        };
+        this.dialogue = lines[this.personality];
+        this.dialogueTimer = 100;
+      }
+
+      move() {
+        this.x += (Math.random() - 0.5) * 2;
+        this.y += (Math.random() - 0.5) * 2;
+        this.x = Math.max(10, Math.min(this.x, canvas.width - 30));
+        this.y = Math.max(30, Math.min(this.y, canvas.height - 30));
+      }
+    }
+
+    let fishes = [];
+    for (let i = 0; i < 5; i++) {
+      const name = "Fish" + Math.floor(Math.random() * 999);
+      const emoji = fishImages[Math.floor(Math.random() * fishImages.length)];
+      const personality = personalities[Math.floor(Math.random() * personalities.length)];
+      fishes.push(new Fish(name, Math.random() * 700, Math.random() * 500, emoji, personality));
+    }
+
+    let selectedFish = [];
+
+    canvas.addEventListener("click", function(event) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      for (const fish of fishes) {
+        if (mouseX > fish.x - 20 && mouseX < fish.x + 20 && mouseY > fish.y - 20 && mouseY < fish.y + 20) {
+          fish.talk();
+          selectedFish.push(fish);
+          if (selectedFish.length === 2) {
+            // Breeding
+            const newName = selectedFish[0].name.slice(0, 3) + selectedFish[1].name.slice(-3);
+            const newEmoji = fishImages[Math.floor(Math.random() * fishImages.length)];
+            const newPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+            fishes.push(new Fish(newName, Math.random() * 700, Math.random() * 500, newEmoji, newPersonality));
+            selectedFish = [];
+          }
+          break;
+        }
+      }
+    });
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const fish of fishes) {
+        fish.move();
+        fish.draw();
+        if (fish.dialogueTimer > 0) fish.dialogueTimer--;
+      }
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
